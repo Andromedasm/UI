@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login Templates Gallery (Modal Preview)</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#eaf0ff;
+      --muted:#a9b4d0;
+      --panel: rgba(255,255,255,.06);
+      --border: rgba(255,255,255,.12);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+      background:
+        radial-gradient(1100px 600px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
+        radial-gradient(900px 500px at 85% 15%, rgba(34,211,238,.14), transparent 55%),
+        radial-gradient(1000px 700px at 50% 95%, rgba(34,197,94,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:28px 20px 10px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    h1{margin:0 0 8px;font-size:18px;letter-spacing:.2px}
+    p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.6}
+    code{color:#d7e3ff}
+    .toolbar{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      padding:10px 0 2px;
+    }
+    .input{
+      flex:1; min-width:220px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+    }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .pill[data-active="true"]{
+      border-color: rgba(34,211,238,.45);
+      box-shadow: 0 0 0 3px rgba(34,211,238,.12);
+    }
+
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 20px 40px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .tile{
+      grid-column: span 4;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+      cursor:pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position:relative;
+      overflow:hidden;
+      min-height:132px;
+      text-align:left;
+    }
+    .tile:hover{transform: translateY(-2px);border-color: rgba(255,255,255,.20)}
+    .tile:focus{outline:none}
+    .tile:focus-visible{box-shadow: 0 0 0 3px rgba(34,211,238,.18), 0 10px 30px rgba(0,0,0,.25)}
+    .tile h3{margin:0 0 6px;font-size:14px;letter-spacing:.2px}
+    .tile .meta{font-size:12px;color:var(--muted);line-height:1.5;margin:0;max-width: 52ch}
+    .badge{
+      position:absolute; top:12px; right:12px;
+      font-size:11px; padding:5px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:var(--text);
+    }
+    .mini{
+      margin-top:10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      color:rgba(255,255,255,.35);
+      font-size:12px;
+    }
+    .dots{display:flex;gap:6px}
+    .dot{width:10px;height:10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.10)}
+    .dot.a{background:rgba(34,211,238,.25);border-color:rgba(34,211,238,.35)}
+    .dot.b{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.35)}
+    .dot.c{background:rgba(34,197,94,.25);border-color:rgba(34,197,94,.35)}
+    @media (max-width: 980px){ .tile{grid-column: span 6;} }
+    @media (max-width: 640px){ .tile{grid-column: span 12;} }
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .backdrop[data-open="true"]{display:flex}
+    .modal{
+      width:min(980px, 100%);
+      height:min(760px, 100%);
+      background: rgba(15, 23, 48, .92);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      backdrop-filter: blur(10px);
+    }
+    .modalHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 12px 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      gap:10px;
+    }
+    .titleWrap{display:flex; flex-direction:column; gap:2px; min-width:0}
+    .modalTitle{font-size:13px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .modalSub{font-size:12px; color:var(--muted); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .actions{display:flex; gap:8px; align-items:center}
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .btn:hover{border-color: rgba(255,255,255,.22)}
+    .btn.primary{
+      border-color: rgba(34,211,238,.40);
+      background: rgba(34,211,238,.14);
+    }
+    .frame{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#fff;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Login Templates Gallery (Click a tile → Modal preview)</h1>
+    <p>Each template is isolated using <code>iframe srcdoc</code>. Press <code>Esc</code> to close.</p>
+    <div class="toolbar">
+      <input id="q" class="input" placeholder="Search: flat, material, glass, brutal, enterprise…" />
+      <button class="pill" data-tag="all" data-active="true" type="button">All</button>
+      <button class="pill" data-tag="visual" type="button">Visual-heavy</button>
+      <button class="pill" data-tag="product" type="button">Product/Tool</button>
+      <button class="pill" data-tag="dark" type="button">Dark-related</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid" aria-label="Login templates gallery"></div>
+  </main>
+
+  <div id="backdrop" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="titleWrap">
+          <p id="modalTitle" class="modalTitle">—</p>
+          <p id="modalSub" class="modalSub">—</p>
+        </div>
+        <div class="actions">
+          <button id="copyBtn" class="btn primary" type="button">Copy template HTML</button>
+          <button id="closeBtn" class="btn" type="button">Close (Esc)</button>
+        </div>
+      </div>
+      <iframe id="frame" class="frame"
+        sandbox="allow-scripts allow-forms allow-popups allow-modals"
+        referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+
+<script>
+  const baseNote = "Demo only. No backend. Inputs are non-functional.";
+
+  const templates = [
+    {
+      id:"flat",
+      name:"Flat Login",
+      desc:"Simple shapes, clear hierarchy, minimal shadows.",
+      tags:["visual"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Flat Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f6f7fb;color:#111;font-family:system-ui}
+  .card{width:min(420px,92vw);background:#fff;border:1px solid #e7e9f0;border-radius:16px;padding:22px}
+  h1{margin:0 0 6px;font-size:20px}
+  p{margin:0 0 16px;color:#444;line-height:1.5;font-size:13px}
+  label{display:block;font-size:12px;color:#333;margin:10px 0 6px}
+  input{width:100%;padding:10px 12px;border:1px solid #d9dde8;border-radius:12px;outline:none}
+  input:focus{border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14)}
+  .row{display:flex;align-items:center;justify-content:space-between;margin:12px 0 0}
+  a{color:#2f6bff;text-decoration:none;font-size:12px}
+  .btn{width:100%;margin-top:14px;background:#2f6bff;color:#fff;border:0;border-radius:12px;padding:10px 12px;font-weight:700;cursor:pointer}
+  .hint{margin-top:12px;color:#6b7280;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <h1>Welcome back</h1>
+    <p>Sign in to continue to your workspace.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="you@company.com" autocomplete="email" />
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" autocomplete="current-password" />
+      <div class="row">
+        <label style="margin:0;display:flex;align-items:center;gap:8px">
+          <input type="checkbox" style="width:auto;margin:0" /> Remember me
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+      <button class="btn" type="button">Sign in</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"material",
+      name:"Material Login",
+      desc:"Elevations, rounded controls, clear state feedback.",
+      tags:["product"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Material Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fafafa;color:#111;font-family:system-ui}
+  .card{width:min(440px,92vw);background:#fff;border-radius:18px;padding:22px;
+    box-shadow:0 10px 26px rgba(0,0,0,.14)}
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .avatar{width:34px;height:34px;border-radius:12px;background:#6750a4;box-shadow:0 10px 18px rgba(103,80,164,.28)}
+  h1{margin:0;font-size:18px}
+  p{margin:6px 0 16px;color:#444;font-size:13px;line-height:1.5}
+  .field{position:relative;margin:12px 0}
+  input{width:100%;padding:14px 12px 10px;border-radius:12px;border:1px solid #dadce0;outline:none}
+  input:focus{border-color:#6750a4;box-shadow:0 0 0 4px rgba(103,80,164,.14)}
+  .label{position:absolute;left:12px;top:9px;font-size:11px;color:#5f6368}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+  a{color:#6750a4;text-decoration:none;font-size:12px}
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:999px;
+    padding:12px 14px;background:#6750a4;color:#fff;font-weight:700;cursor:pointer;
+    box-shadow:0 10px 18px rgba(103,80,164,.28)
+  }
+  .btn:active{transform:translateY(1px);box-shadow:0 6px 12px rgba(103,80,164,.28)}
+  .hint{margin-top:12px;color:#6b7280;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <div class="top"><div class="avatar"></div><h1>Sign in</h1></div>
+    <p>Use your account to access the dashboard.</p>
+    <form>
+      <div class="field">
+        <div class="label">Email</div>
+        <input placeholder="name@domain.com" autocomplete="email" />
+      </div>
+      <div class="field">
+        <div class="label">Password</div>
+        <input type="password" placeholder="Enter your password" autocomplete="current-password" />
+      </div>
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#444">
+          <input type="checkbox" /> Keep me signed in
+        </label>
+        <a href="#">Reset password</a>
+      </div>
+      <button class="btn" type="button">Continue</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"neumorphism",
+      name:"Neumorphism Login",
+      desc:"Soft surfaces with inset/outset shadows.",
+      tags:["visual"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Neumorphism Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#e9eef6;color:#1b2430;font-family:system-ui}
+  .card{
+    width:min(440px,92vw);border-radius:22px;padding:22px;
+    background:#e9eef6;
+    box-shadow: 14px 14px 28px rgba(137,153,175,.35),
+               -14px -14px 28px rgba(255,255,255,.9)
+  }
+  h1{margin:0 0 6px;font-size:20px}
+  p{margin:0 0 16px;color:#465468;font-size:13px;line-height:1.5}
+  label{display:block;font-size:12px;color:#415064;margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:14px;border:0;outline:none;
+    background:#e9eef6;
+    box-shadow: inset 8px 8px 16px rgba(137,153,175,.30),
+               inset -8px -8px 16px rgba(255,255,255,.95)
+  }
+  input:focus{box-shadow:
+    inset 10px 10px 18px rgba(137,153,175,.30),
+    inset -10px -10px 18px rgba(255,255,255,.95),
+    0 0 0 3px rgba(55,108,255,.12)
+  }
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:14px;padding:12px 14px;
+    background:#e9eef6;color:#1b2430;font-weight:800;cursor:pointer;
+    box-shadow: 10px 10px 18px rgba(137,153,175,.35),
+               -10px -10px 18px rgba(255,255,255,.90)
+  }
+  .btn:active{box-shadow:
+    inset 8px 8px 14px rgba(137,153,175,.32),
+    inset -8px -8px 14px rgba(255,255,255,.92)
+  }
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#1b2430;text-decoration:none;font-size:12px;border-bottom:1px solid rgba(27,36,48,.25)}
+  .hint{margin-top:12px;color:#5b6b82;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <h1>Welcome</h1>
+    <p>Sign in with your email and password.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="you@example.com" />
+      <label>Password</label>
+      <input type="password" placeholder="••••••••" />
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#415064;margin:0">
+          <input type="checkbox" style="width:auto" /> Remember
+        </label>
+        <a href="#">Need help?</a>
+      </div>
+      <button class="btn" type="button">Sign in</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"glass",
+      name:"Glassmorphism Login",
+      desc:"Blurred background, translucent card, vivid gradient.",
+      tags:["visual","dark"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Glass Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;display:grid;place-items:center;
+    background:
+      radial-gradient(circle at 20% 20%, #ff6bd6, transparent 45%),
+      radial-gradient(circle at 80% 30%, #4aa3ff, transparent 45%),
+      radial-gradient(circle at 50% 90%, #6dffb2, transparent 50%),
+      #0b1220;
+    color:#eaf0ff;font-family:system-ui
+  }
+  .card{
+    width:min(460px,92vw);padding:22px;border-radius:20px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.22);
+    backdrop-filter: blur(16px);
+    box-shadow:0 18px 44px rgba(0,0,0,.45)
+  }
+  h1{margin:0 0 6px;font-size:20px}
+  p{margin:0 0 16px;color:rgba(234,240,255,.82);font-size:13px;line-height:1.5}
+  label{display:block;font-size:12px;color:rgba(234,240,255,.85);margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:14px;outline:none;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(15,18,32,.35); color:#eaf0ff
+  }
+  input:focus{border-color:rgba(34,211,238,.65);box-shadow:0 0 0 3px rgba(34,211,238,.16)}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:rgba(234,240,255,.92);text-decoration:none;font-size:12px}
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:14px;padding:12px 14px;
+    background:rgba(255,255,255,.88);color:#0b1220;font-weight:900;cursor:pointer
+  }
+  .hint{margin-top:12px;color:rgba(234,240,255,.70);font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <h1>Sign in</h1>
+    <p>Secure access to your account.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="name@domain.com" />
+      <label>Password</label>
+      <input type="password" placeholder="Password" />
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;margin:0">
+          <input type="checkbox" /> Stay signed in
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+      <button class="btn" type="button">Continue</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"skeuo",
+      name:"Modern Skeuomorphic Login",
+      desc:"Subtle materials: gradients, highlights, tactile controls.",
+      tags:["visual"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Skeuomorphic Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f2f2f2;color:#111;font-family:system-ui}
+  .card{
+    width:min(460px,92vw);border-radius:18px;padding:22px;
+    background:linear-gradient(#fff,#f7f7f7);
+    border:1px solid #dcdcdc;
+    box-shadow:0 12px 26px rgba(0,0,0,.12)
+  }
+  .top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .badge{
+    width:40px;height:40px;border-radius:14px;
+    background:linear-gradient(#fdfdfd,#e8e8e8);
+    border:1px solid #cfcfcf;
+    box-shadow: inset 0 2px 0 rgba(255,255,255,.8),
+                inset 0 -2px 6px rgba(0,0,0,.12),
+                0 10px 18px rgba(0,0,0,.10)
+  }
+  h1{margin:0;font-size:18px}
+  p{margin:8px 0 16px;color:#444;font-size:13px;line-height:1.5}
+  label{display:block;font-size:12px;color:#333;margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:12px;outline:none;
+    border:1px solid #d3d3d3;
+    background:linear-gradient(#ffffff,#f2f2f2);
+    box-shadow: inset 0 1px 2px rgba(0,0,0,.08)
+  }
+  input:focus{border-color:#6b7280;box-shadow:0 0 0 3px rgba(0,0,0,.08), inset 0 1px 2px rgba(0,0,0,.08)}
+  .btn{
+    width:100%;margin-top:14px;border-radius:12px;border:1px solid #bdbdbd;
+    background:linear-gradient(#ffffff,#e9e9e9);
+    padding:12px 14px;font-weight:900;cursor:pointer;
+    box-shadow:0 10px 18px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.8)
+  }
+  .btn:active{transform:translateY(1px);box-shadow:0 6px 12px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.8)}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#111;text-decoration:none;font-size:12px;border-bottom:1px solid rgba(0,0,0,.25)}
+  .hint{margin-top:12px;color:#6b7280;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <div class="top"><div class="badge"></div><h1>Account login</h1></div>
+    <p>Enter your credentials to continue.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="you@company.com" />
+      <label>Password</label>
+      <input type="password" placeholder="Password" />
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;margin:0;color:#333">
+          <input type="checkbox" /> Remember me
+        </label>
+        <a href="#">Forgot?</a>
+      </div>
+      <button class="btn" type="button">Sign in</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"minimal",
+      name:"Minimal Login",
+      desc:"Whitespace, typography, and a single accent.",
+      tags:["visual"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Minimal Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fff;color:#111;font-family: ui-sans-serif,system-ui}
+  .wrap{width:min(460px,92vw);padding:10px}
+  h1{margin:0 0 10px;font-size:44px;letter-spacing:-.03em}
+  p{margin:0 0 18px;color:#444;line-height:1.7}
+  label{display:block;font-size:12px;color:#111;margin:10px 0 6px}
+  input{width:100%;padding:12px 0;border:0;border-bottom:1px solid #e5e7eb;outline:none}
+  input:focus{border-bottom-color:#111}
+  .btn{margin-top:18px;border:1px solid #111;background:#111;color:#fff;padding:12px 14px;border-radius:999px;font-weight:800;cursor:pointer;width:100%}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px}
+  a{color:#111;text-underline-offset:4px}
+  .hint{margin-top:14px;color:#6b7280;font-size:12px}
+</style>
+<body>
+  <div class="wrap">
+    <h1>Sign in</h1>
+    <p>Use your email to access your account.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="name@domain.com" />
+      <label>Password</label>
+      <input type="password" placeholder="Password" />
+      <button class="btn" type="button">Continue</button>
+      <div class="row">
+        <a href="#">Forgot password?</a>
+        <a href="#">Create account</a>
+      </div>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"dashboard",
+      name:"Product Dashboard Login",
+      desc:"Tool-like layout with split panel and SSO buttons.",
+      tags:["product","dark"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Product Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f172a;color:#e2e8f0;font-family:system-ui}
+  .shell{
+    width:min(980px,94vw);
+    background:#0b1222;
+    border:1px solid #1f2a44;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+    display:grid;
+    grid-template-columns: 1.1fr .9fr;
+  }
+  .left{padding:26px;background:linear-gradient(180deg, rgba(34,211,238,.10), transparent 40%)}
+  .right{padding:26px;border-left:1px solid #1f2a44;background:#0f172a}
+  h1{margin:0 0 8px;font-size:18px}
+  p{margin:0 0 16px;color:#9aa7bd;font-size:13px;line-height:1.6}
+  .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:16px}
+  .kpi{background:#0f172a;border:1px solid #1f2a44;border-radius:14px;padding:12px}
+  .kpi b{display:block;font-size:18px}
+  .kpi span{color:#9aa7bd;font-size:12px}
+  label{display:block;font-size:12px;color:#cbd5e1;margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:12px;outline:none;
+    border:1px solid #1f2a44;background:#0b1222;color:#e2e8f0
+  }
+  input:focus{border-color:rgba(34,211,238,.55);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px 14px;
+    background:#22c55e;color:#06210f;font-weight:900;cursor:pointer
+  }
+  .sso{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ghost{
+    border:1px solid #1f2a44;background:#0b1222;color:#e2e8f0;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:700
+  }
+  a{color:#9aa7bd;text-decoration:none;font-size:12px}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  .hint{margin-top:12px;color:#9aa7bd;font-size:12px}
+  @media (max-width: 860px){
+    .shell{grid-template-columns:1fr}
+    .right{border-left:0;border-top:1px solid #1f2a44}
+  }
+</style>
+<body>
+  <div class="shell">
+    <section class="left">
+      <h1>Acme Admin</h1>
+      <p>Manage projects, users, and billing from a single dashboard.</p>
+      <div class="kpis">
+        <div class="kpi"><b>8.2k</b><span>Active users</span></div>
+        <div class="kpi"><b>99.9%</b><span>Uptime</span></div>
+        <div class="kpi"><b>210ms</b><span>p95 latency</span></div>
+      </div>
+      <p style="margin-top:16px">${baseNote}</p>
+    </section>
+    <section class="right">
+      <h1>Sign in</h1>
+      <p>Use email or continue with SSO.</p>
+      <div class="sso">
+        <button class="ghost" type="button">Continue with Google</button>
+        <button class="ghost" type="button">Continue with GitHub</button>
+      </div>
+      <div style="height:12px"></div>
+      <form>
+        <label>Email</label>
+        <input placeholder="name@company.com" />
+        <label>Password</label>
+        <input type="password" placeholder="Password" />
+        <div class="row">
+          <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1;margin:0">
+            <input type="checkbox" /> Remember
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+        <button class="btn" type="button">Sign in</button>
+        <div class="hint">No account? <a href="#" style="color:#e2e8f0">Request access</a></div>
+      </form>
+    </section>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"brutal",
+      name:"Neo-Brutalist Login",
+      desc:"Bold borders, loud color blocks, sharp layout.",
+      tags:["visual"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Brutalist Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#fff200;color:#000;font-family:system-ui}
+  .card{width:min(460px,92vw);background:#fff;border:4px solid #000;padding:18px;box-shadow:10px 10px 0 #000}
+  h1{margin:0 0 8px;font-size:22px}
+  p{margin:0 0 14px;font-size:13px}
+  label{display:block;font-size:12px;margin:10px 0 6px;font-weight:800}
+  input{width:100%;padding:12px 12px;border:3px solid #000;border-radius:0;outline:none}
+  .btn{width:100%;margin-top:14px;background:#ff3b3b;color:#000;border:3px solid #000;padding:12px 14px;font-weight:900;cursor:pointer}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px;font-weight:800}
+  a{color:#000;text-decoration:underline;text-underline-offset:3px}
+</style>
+<body>
+  <div class="card">
+    <h1>SIGN IN</h1>
+    <p>Fast. Loud. Functional.</p>
+    <form>
+      <label>EMAIL</label>
+      <input placeholder="NAME@DOMAIN.COM" />
+      <label>PASSWORD</label>
+      <input type="password" placeholder="PASSWORD" />
+      <button class="btn" type="button">DO IT</button>
+      <div class="row">
+        <span>${baseNote}</span>
+        <a href="#">HELP</a>
+      </div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"retro",
+      name:"Retro Terminal Login",
+      desc:"Lo-fi terminal look with monospace and neon green.",
+      tags:["visual","dark"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Retro Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0f0c;color:#7CFF7C;font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+  .panel{width:min(520px,92vw);border:2px solid #7CFF7C;padding:16px;box-shadow:8px 8px 0 #2b7;background:#0b0f0c}
+  .line{opacity:.92;margin:0 0 12px}
+  label{display:block;font-size:12px;margin:10px 0 6px}
+  input{width:100%;padding:10px 10px;border:2px solid #7CFF7C;background:#061006;color:#7CFF7C;outline:none}
+  .btn{margin-top:14px;border:2px solid #7CFF7C;background:#061006;color:#7CFF7C;padding:10px 12px;cursor:pointer;font-weight:800;width:100%}
+  a{color:#7CFF7C}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:12px}
+</style>
+<body>
+  <div class="panel">
+    <p class="line">SYS: READY</p>
+    <p class="line">AUTH: REQUIRED</p>
+    <form>
+      <label>EMAIL</label>
+      <input placeholder="USER@HOST" />
+      <label>PASSWORD</label>
+      <input type="password" placeholder="********" />
+      <button class="btn" type="button">LOGIN</button>
+      <div class="row">
+        <span>${baseNote}</span>
+        <a href="#">RECOVER</a>
+      </div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"enterprise",
+      name:"Enterprise Login",
+      desc:"Neutral UI, clear form affordances, compliance note.",
+      tags:["product"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Enterprise Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a;font-family:system-ui}
+  .wrap{
+    width:min(980px,94vw);
+    background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;
+    display:grid;grid-template-columns: 1fr 1fr;
+  }
+  .left{padding:26px;background:#f1f5f9;border-right:1px solid #e2e8f0}
+  .right{padding:26px}
+  h1{margin:0 0 8px;font-size:18px}
+  p{margin:0 0 16px;color:#475569;font-size:13px;line-height:1.6}
+  .callout{padding:12px;border:1px solid #cbd5e1;border-radius:12px;background:#fff}
+  label{display:block;font-size:12px;color:#0f172a;margin:10px 0 6px}
+  input{
+    width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;outline:none
+  }
+  input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .btn{
+    width:100%;margin-top:14px;border:1px solid #1d4ed8;background:#2563eb;color:#fff;
+    padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer
+  }
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#2563eb;text-decoration:none;font-size:12px}
+  .fineprint{margin-top:12px;color:#64748b;font-size:12px;line-height:1.5}
+  @media (max-width: 860px){
+    .wrap{grid-template-columns:1fr}
+    .left{border-right:0;border-bottom:1px solid #e2e8f0}
+  }
+</style>
+<body>
+  <div class="wrap">
+    <section class="left">
+      <h1>Acme Enterprise</h1>
+      <p>Secure access for approved users.</p>
+      <div class="callout">
+        <p style="margin:0;font-size:12px;color:#334155">
+          This system is monitored. Unauthorized access is prohibited.
+        </p>
+      </div>
+      <p style="margin-top:12px;font-size:12px;color:#475569">${baseNote}</p>
+    </section>
+    <section class="right">
+      <h1>Sign in</h1>
+      <p>Use your corporate email address.</p>
+      <form>
+        <label>Work email</label>
+        <input placeholder="name@company.com" />
+        <label>Password</label>
+        <input type="password" placeholder="Password" />
+        <div class="row">
+          <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#0f172a;margin:0">
+            <input type="checkbox" /> Remember this device
+          </label>
+          <a href="#">Need help?</a>
+        </div>
+        <button class="btn" type="button">Sign in</button>
+        <div class="fineprint">
+          By signing in, you agree to the Acceptable Use Policy and acknowledge the Privacy Notice.
+        </div>
+      </form>
+    </section>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"illustration3d",
+      name:"Brand Accent (Illustration/3D)",
+      desc:"Gradient badge + soft glow for brand identity.",
+      tags:["visual","dark"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Brand Accent Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:#eaf0ff;font-family:system-ui}
+  .card{
+    width:min(520px,92vw);
+    border-radius:18px;padding:22px;
+    background:#111a33;border:1px solid #25315b;
+    box-shadow:0 18px 60px rgba(0,0,0,.45)
+  }
+  .top{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+  .badge{
+    width:56px;height:56px;border-radius:18px;
+    background:
+      radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.15) 35%, transparent 60%),
+      linear-gradient(135deg, #7c3aed, #22d3ee);
+    box-shadow:0 18px 30px rgba(124,58,237,.25)
+  }
+  h1{margin:0;font-size:18px}
+  p{margin:8px 0 16px;color:#a9b4d0;font-size:13px;line-height:1.6}
+  label{display:block;font-size:12px;color:#cbd5e1;margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:12px;outline:none;
+    border:1px solid #25315b;background:#0b1020;color:#eaf0ff
+  }
+  input:focus{border-color:rgba(124,58,237,.65);box-shadow:0 0 0 3px rgba(124,58,237,.16)}
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px 14px;
+    background:linear-gradient(135deg,#7c3aed,#22d3ee);
+    color:#061018;font-weight:900;cursor:pointer
+  }
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#a9b4d0;text-decoration:none;font-size:12px}
+  .hint{margin-top:12px;color:#a9b4d0;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <div class="top">
+      <div class="badge"></div>
+      <div>
+        <h1>Sign in</h1>
+        <p style="margin:4px 0 0">A clean login with a strong brand accent.</p>
+      </div>
+    </div>
+    <form>
+      <label>Email</label>
+      <input placeholder="name@domain.com" />
+      <label>Password</label>
+      <input type="password" placeholder="Password" />
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1;margin:0">
+          <input type="checkbox" /> Remember
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+      <button class="btn" type="button">Continue</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    {
+      id:"darkfirst",
+      name:"Dark-first Login (Linear-ish)",
+      desc:"Dark surfaces, subtle borders, crisp spacing and focus.",
+      tags:["dark","product"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dark-first Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{
+    margin:0;min-height:100vh;display:grid;place-items:center;
+    background: radial-gradient(900px 520px at 60% 0%, rgba(99,102,241,.14), transparent 60%),
+                #0a0f1a;
+    color:#e6edf7;font-family:system-ui
+  }
+  .card{
+    width:min(460px,92vw);
+    background: rgba(15,23,42,.92);
+    border:1px solid rgba(148,163,184,.18);
+    border-radius:16px;
+    padding:22px;
+    box-shadow:0 20px 70px rgba(0,0,0,.55);
+    backdrop-filter: blur(8px);
+  }
+  h1{margin:0 0 6px;font-size:18px;letter-spacing:.2px}
+  p{margin:0 0 16px;color:#9aa7bd;font-size:13px;line-height:1.6}
+  label{display:block;font-size:12px;color:#cbd5e1;margin:10px 0 6px}
+  input{
+    width:100%;padding:12px 12px;border-radius:12px;outline:none;
+    border:1px solid rgba(148,163,184,.20);
+    background: rgba(2,6,23,.55);
+    color:#e6edf7;
+  }
+  input:focus{
+    border-color: rgba(99,102,241,.55);
+    box-shadow:0 0 0 3px rgba(99,102,241,.18);
+  }
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#9aa7bd;text-decoration:none;font-size:12px}
+  a:hover{color:#e6edf7}
+  .btn{
+    width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px 14px;
+    background:#22c55e;color:#06210f;font-weight:900;cursor:pointer
+  }
+  .hint{margin-top:12px;color:#9aa7bd;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <h1>Sign in</h1>
+    <p>Welcome back. Enter your details to continue.</p>
+    <form>
+      <label>Email</label>
+      <input placeholder="name@company.com" />
+      <label>Password</label>
+      <input type="password" placeholder="Password" />
+      <div class="row">
+        <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#cbd5e1;margin:0">
+          <input type="checkbox" /> Remember me
+        </label>
+        <a href="#">Forgot password?</a>
+      </div>
+      <button class="btn" type="button">Continue</button>
+      <div class="hint">${baseNote}</div>
+    </form>
+  </div>
+</body></html>`
+    },
+
+    // Extra: "Card-based" as a distinct login (instead of repeating dashboard)
+    {
+      id:"cardstack",
+      name:"Card-based Login",
+      desc:"Stacked cards, clear sections, responsive-friendly.",
+      tags:["product"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Card-based Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f6f7fb;color:#111;font-family:system-ui}
+  .stack{width:min(520px,92vw);display:grid;gap:12px}
+  .card{background:#fff;border:1px solid #e7e9f0;border-radius:16px;padding:18px;box-shadow:0 10px 22px rgba(0,0,0,.06)}
+  h1{margin:0 0 6px;font-size:18px}
+  p{margin:0;color:#4b5563;font-size:13px;line-height:1.6}
+  label{display:block;font-size:12px;color:#374151;margin:10px 0 6px}
+  input{width:100%;padding:12px 12px;border-radius:12px;border:1px solid #d9dde8;outline:none}
+  input:focus{border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.14)}
+  .btn{width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px 14px;background:#111827;color:#fff;font-weight:900;cursor:pointer}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .ghost{border:1px solid #d9dde8;background:#fff;border-radius:12px;padding:10px 12px;cursor:pointer;font-weight:800}
+  .hint{margin-top:10px;color:#6b7280;font-size:12px}
+</style>
+<body>
+  <div class="stack">
+    <div class="card">
+      <h1>Acme</h1>
+      <p>Sign in to manage your projects.</p>
+    </div>
+    <div class="card">
+      <form>
+        <label>Email</label>
+        <input placeholder="name@domain.com" />
+        <label>Password</label>
+        <input type="password" placeholder="Password" />
+        <button class="btn" type="button">Sign in</button>
+        <div class="two">
+          <button class="ghost" type="button">Continue with Google</button>
+          <button class="ghost" type="button">Continue with GitHub</button>
+        </div>
+        <div class="hint">${baseNote}</div>
+      </form>
+    </div>
+  </div>
+</body></html>`
+    },
+
+    // Extra: "Clean modern" variant (keeps 12 total, replaces nothing)
+    {
+      id:"cleanaccent",
+      name:"Clean Accent Login",
+      desc:"Modern flat with accent bar and tidy spacing.",
+      tags:["visual","product"],
+      html:`<!doctype html><html lang="en"><meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Clean Accent Login</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f8fafc;color:#0f172a;font-family:system-ui}
+  .card{width:min(460px,92vw);background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden}
+  .bar{height:6px;background:linear-gradient(90deg,#2563eb,#22c55e)}
+  .inner{padding:22px}
+  h1{margin:0 0 6px;font-size:18px}
+  p{margin:0 0 16px;color:#475569;font-size:13px;line-height:1.6}
+  label{display:block;font-size:12px;color:#334155;margin:10px 0 6px}
+  input{width:100%;padding:12px 12px;border:1px solid #cbd5e1;border-radius:12px;outline:none}
+  input:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+  .row{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
+  a{color:#2563eb;text-decoration:none;font-size:12px}
+  .btn{width:100%;margin-top:14px;border:0;border-radius:12px;padding:12px 14px;background:#2563eb;color:#fff;font-weight:900;cursor:pointer}
+  .hint{margin-top:12px;color:#64748b;font-size:12px}
+</style>
+<body>
+  <div class="card">
+    <div class="bar"></div>
+    <div class="inner">
+      <h1>Sign in</h1>
+      <p>Enter your email and password to continue.</p>
+      <form>
+        <label>Email</label>
+        <input placeholder="name@domain.com" />
+        <label>Password</label>
+        <input type="password" placeholder="Password" />
+        <div class="row">
+          <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:#334155;margin:0">
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+        <button class="btn" type="button">Continue</button>
+        <div class="hint">${baseNote}</div>
+      </form>
+    </div>
+  </div>
+</body></html>`
+    },
+  ];
+
+  // Ensure exactly 12 items. (We currently have 12.)
+  const grid = document.getElementById('grid');
+  const q = document.getElementById('q');
+  const pills = [...document.querySelectorAll('.pill')];
+
+  const backdrop = document.getElementById('backdrop');
+  const frame = document.getElementById('frame');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalSub = document.getElementById('modalSub');
+  const closeBtn = document.getElementById('closeBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  let activeTag = "all";
+  let activeId = null;
+
+  function escapeHtml(s){
+    return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function tileTemplate(t){
+    const keywords = (t.id+" "+t.name+" "+t.desc).toLowerCase();
+    return `
+      <button class="tile" data-id="${t.id}" data-key="${escapeHtml(keywords)}" type="button">
+        <span class="badge">${escapeHtml(t.id)}</span>
+        <h3>${escapeHtml(t.name)}</h3>
+        <p class="meta">${escapeHtml(t.desc)}</p>
+        <div class="mini" aria-hidden="true">
+          <span class="dots"><span class="dot a"></span><span class="dot b"></span><span class="dot c"></span></span>
+          <span>Click to preview</span>
+        </div>
+      </button>
+    `;
+  }
+
+  function render(){
+    const query = q.value.trim().toLowerCase();
+    const list = templates.filter(t=>{
+      const tagOk = activeTag==="all" ? true : t.tags.includes(activeTag);
+      const qOk = !query ? true : (t.id+" "+t.name+" "+t.desc).toLowerCase().includes(query);
+      return tagOk && qOk;
+    });
+    grid.innerHTML = list.map(tileTemplate).join("");
+  }
+
+  function openModal(id){
+    const t = templates.find(x=>x.id===id);
+    if(!t) return;
+    activeId = id;
+    modalTitle.textContent = t.name;
+    modalSub.textContent = t.desc;
+    frame.srcdoc = t.html;
+    backdrop.dataset.open = "true";
+    closeBtn.focus();
+  }
+  function closeModal(){
+    backdrop.dataset.open = "false";
+    frame.srcdoc = "";
+    activeId = null;
+  }
+
+  grid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tile');
+    if(!btn) return;
+    openModal(btn.dataset.id);
+  });
+
+  pills.forEach(p=>{
+    p.addEventListener('click', ()=>{
+      pills.forEach(x=>x.dataset.active="false");
+      p.dataset.active="true";
+      activeTag = p.dataset.tag;
+      render();
+    });
+  });
+
+  q.addEventListener('input', render);
+  closeBtn.addEventListener('click', closeModal);
+
+  backdrop.addEventListener('click', (e)=>{
+    if(e.target === backdrop) closeModal();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === "Escape" && backdrop.dataset.open === "true") closeModal();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    if(!activeId) return;
+    const t = templates.find(x=>x.id===activeId);
+    const text = t?.html || "";
+    try{
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = "Copied";
+      setTimeout(()=>copyBtn.textContent="Copy template HTML", 900);
+    }catch{
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      copyBtn.textContent = "Copied";
+      setTimeout(()=>copyBtn.textContent="Copy template HTML", 900);
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
