@@ -1,0 +1,608 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UI 风格画廊（Modal 预览）</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1730;
+      --card:#101b3a;
+      --border:#23305a;
+      --text:#eaf0ff;
+      --muted:#a9b4d0;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1100px 600px at 15% 10%, rgba(124,58,237,.18), transparent 60%),
+                  radial-gradient(900px 500px at 85% 15%, rgba(34,211,238,.14), transparent 55%),
+                  radial-gradient(1000px 700px at 50% 95%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+    }
+    header{
+      padding:28px 20px 8px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    h1{
+      margin:0 0 8px;
+      font-size:20px;
+      letter-spacing:.2px;
+    }
+    p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.6}
+    .toolbar{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      padding:10px 0 2px;
+    }
+    .input{
+      flex:1;
+      min-width:220px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--text);
+      border-radius:12px;
+      padding:10px 12px;
+      outline:none;
+    }
+    .pill{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .pill[data-active="true"]{
+      border-color: rgba(34,211,238,.45);
+      box-shadow: 0 0 0 3px rgba(34,211,238,.12);
+    }
+
+    main{
+      max-width:1100px;
+      margin:0 auto;
+      padding:10px 20px 40px;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .tile{
+      grid-column: span 4;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px;
+      padding:14px;
+      cursor:pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+      position:relative;
+      overflow:hidden;
+      min-height:126px;
+    }
+    .tile:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.20);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
+    }
+    .tile:focus{outline:none}
+    .tile:focus-visible{
+      box-shadow: 0 0 0 3px rgba(34,211,238,.18), 0 10px 30px rgba(0,0,0,.25);
+    }
+    .tile h3{
+      margin:0 0 6px;
+      font-size:14px;
+      letter-spacing:.2px;
+    }
+    .tile .meta{
+      font-size:12px;color:var(--muted);line-height:1.5;margin:0;
+      max-width: 46ch;
+    }
+    .badge{
+      position:absolute;
+      top:12px; right:12px;
+      font-size:11px;
+      padding:5px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.20);
+      color:var(--text);
+    }
+    .previewBar{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.10);
+    }
+    .dot.a{background:rgba(34,211,238,.25); border-color: rgba(34,211,238,.35)}
+    .dot.b{background:rgba(124,58,237,.25); border-color: rgba(124,58,237,.35)}
+    .dot.c{background:rgba(34,197,94,.25); border-color: rgba(34,197,94,.35)}
+
+    /* Responsive */
+    @media (max-width: 980px){ .tile{grid-column: span 6;} }
+    @media (max-width: 640px){ .tile{grid-column: span 12;} }
+
+    /* Modal */
+    .backdrop{
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:50;
+    }
+    .backdrop[data-open="true"]{display:flex}
+    .modal{
+      width:min(980px, 100%);
+      height:min(720px, 100%);
+      background: rgba(15, 23, 48, .92);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+      backdrop-filter: blur(10px);
+    }
+    .modalHeader{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 12px 12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      gap:10px;
+    }
+    .titleWrap{display:flex; flex-direction:column; gap:2px; min-width:0}
+    .modalTitle{font-size:13px; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .modalSub{font-size:12px; color:var(--muted); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+    .actions{display:flex; gap:8px; align-items:center}
+    .btn{
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      border-radius:12px;
+      padding:8px 10px;
+      font-size:12px;
+      cursor:pointer;
+    }
+    .btn:hover{border-color: rgba(255,255,255,.22)}
+    .btn.primary{
+      border-color: rgba(34,211,238,.40);
+      background: rgba(34,211,238,.14);
+    }
+    .frame{
+      width:100%;
+      height:100%;
+      border:0;
+      background:#fff;
+    }
+    .srOnly{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>现代 Web UI 风格画廊（点击卡片 → Modal 预览）</h1>
+    <p>每个预览都来自你之前那 12 段 demo（用 iframe 的 <code>srcdoc</code> 渲染，样式互不影响）。按 <kbd>Esc</kbd> 关闭。</p>
+
+    <div class="toolbar">
+      <input id="q" class="input" placeholder="搜索：flat / material / glass / brutal / enterprise …" />
+      <button class="pill" data-tag="all" data-active="true">全部</button>
+      <button class="pill" data-tag="visual">偏视觉</button>
+      <button class="pill" data-tag="product">偏产品/工具</button>
+      <button class="pill" data-tag="dark">暗色相关</button>
+    </div>
+  </header>
+
+  <main>
+    <div id="grid" class="grid" aria-label="UI gallery"></div>
+  </main>
+
+  <!-- Modal -->
+  <div id="backdrop" class="backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modalHeader">
+        <div class="titleWrap">
+          <p id="modalTitle" class="modalTitle">—</p>
+          <p id="modalSub" class="modalSub">—</p>
+        </div>
+        <div class="actions">
+          <button id="copyBtn" class="btn primary" type="button">复制该示例 HTML</button>
+          <button id="closeBtn" class="btn" type="button">关闭 (Esc)</button>
+        </div>
+      </div>
+      <iframe id="frame" class="frame" sandbox="allow-scripts allow-forms allow-popups allow-modals" referrerpolicy="no-referrer"></iframe>
+    </div>
+  </div>
+
+<script>
+  // 12 个示例（沿用你之前那批代码）
+  const demos = [
+    {
+      id:"flat",
+      name:"扁平化 Flat",
+      desc:"去拟物、弱阴影、强调色块与排版层级",
+      tags:["visual"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#f6f7fb;color:#111}
+  .card{width:360px;background:#fff;border:1px solid #e7e9f0;border-radius:14px;padding:18px}
+  .btn{display:inline-block;margin-top:12px;background:#2f6bff;color:#fff;
+    padding:10px 12px;border-radius:10px;text-decoration:none;font-weight:600}
+  .tag{display:inline-block;background:#eef2ff;color:#2f6bff;padding:4px 8px;border-radius:999px;font-size:12px}
+</style>
+<div class="card">
+  <div class="tag">Flat</div>
+  <h3>Project Alpha</h3>
+  <p>Clean layout, simple shapes, minimal shadows.</p>
+  <a class="btn" href="#">Continue</a>
+</div>`
+    },
+    {
+      id:"material",
+      name:"Material（层级 + 阴影）",
+      desc:"强调 elevation、组件一致性与状态反馈",
+      tags:["product"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#fafafa}
+  .card{width:360px;background:#fff;border-radius:16px;padding:18px;
+    box-shadow:0 8px 20px rgba(0,0,0,.12)}
+  .btn{display:inline-flex;align-items:center;gap:8px;margin-top:12px;
+    background:#6750a4;color:#fff;border-radius:999px;padding:10px 14px;
+    text-decoration:none;font-weight:600;box-shadow:0 6px 14px rgba(103,80,164,.35)}
+  .btn:active{transform:translateY(1px);box-shadow:0 3px 8px rgba(103,80,164,.35)}
+  .chip{display:inline-block;background:#eaddff;color:#381e72;padding:6px 10px;border-radius:999px;font-size:12px}
+</style>
+<div class="card">
+  <span class="chip">Material</span>
+  <h3>Elevated card</h3>
+  <p>Elevation + consistent rounded shapes.</p>
+  <a class="btn" href="#"><span>＋</span><span>Add</span></a>
+</div>`
+    },
+    {
+      id:"neumorphism",
+      name:"新拟态 Neumorphism",
+      desc:"同色面+内外阴影营造软浮雕",
+      tags:["visual"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#e9eef6;color:#1b2430}
+  .card{width:360px;border-radius:18px;padding:20px;
+    background:#e9eef6;
+    box-shadow: 12px 12px 24px rgba(137,153,175,.35),
+               -12px -12px 24px rgba(255,255,255,.9)}
+  .btn{display:inline-block;margin-top:12px;padding:10px 14px;border-radius:14px;
+    background:#e9eef6;text-decoration:none;color:#1b2430;font-weight:700;
+    box-shadow: 8px 8px 16px rgba(137,153,175,.35),
+               -8px -8px 16px rgba(255,255,255,.9)}
+  .btn:active{box-shadow: inset 6px 6px 12px rgba(137,153,175,.35),
+                         inset -6px -6px 12px rgba(255,255,255,.9)}
+</style>
+<div class="card">
+  <h3>Soft UI</h3>
+  <p>Same-color surface, subtle inner/outer shadows.</p>
+  <a class="btn" href="#">Press</a>
+</div>`
+    },
+    {
+      id:"glass",
+      name:"玻璃拟态 Glassmorphism",
+      desc:"半透明磨砂 + 背景模糊 + 叠层",
+      tags:["visual","dark"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:0;min-height:100vh;display:grid;place-items:center;
+    background: radial-gradient(circle at 20% 20%, #ff6bd6, transparent 45%),
+                radial-gradient(circle at 80% 30%, #4aa3ff, transparent 45%),
+                radial-gradient(circle at 50% 90%, #6dffb2, transparent 50%),
+                #0b1220;color:#eaf0ff}
+  .card{width:380px;padding:18px;border-radius:18px;
+    background:rgba(255,255,255,.10);
+    border:1px solid rgba(255,255,255,.22);
+    backdrop-filter: blur(14px);
+    box-shadow:0 16px 40px rgba(0,0,0,.35)}
+  .btn{display:inline-block;margin-top:12px;color:#0b1220;background:rgba(255,255,255,.85);
+    padding:10px 12px;border-radius:12px;text-decoration:none;font-weight:700}
+</style>
+<div class="card">
+  <h3>Glass Card</h3>
+  <p>Blurred background + translucent layers.</p>
+  <a class="btn" href="#">Open</a>
+</div>`
+    },
+    {
+      id:"skeuo",
+      name:"现代拟物 Skeuomorphism",
+      desc:"克制的渐变/高光/材质感",
+      tags:["visual"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#f2f2f2}
+  .card{width:360px;background:linear-gradient(#fff,#f7f7f7);border-radius:16px;
+    padding:18px;border:1px solid #dcdcdc;box-shadow:0 10px 22px rgba(0,0,0,.10)}
+  .knob{width:56px;height:56px;border-radius:14px;
+    background:linear-gradient(#fdfdfd,#e8e8e8);
+    border:1px solid #cfcfcf;box-shadow: inset 0 2px 0 rgba(255,255,255,.8),
+                              inset 0 -2px 6px rgba(0,0,0,.12),
+                              0 8px 16px rgba(0,0,0,.12)}
+</style>
+<div class="card">
+  <h3>Control Panel</h3>
+  <p>Gradients + subtle specular highlights.</p>
+  <div class="knob"></div>
+</div>`
+    },
+    {
+      id:"minimal",
+      name:"极简 Minimalism",
+      desc:"大留白 + 强排版 + 弱装饰",
+      tags:["visual"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:ui-sans-serif,system-ui;margin:60px;background:#fff;color:#111}
+  .wrap{max-width:520px}
+  h1{font-size:40px;letter-spacing:-.02em;margin:0 0 10px}
+  p{line-height:1.7;color:#444;margin:0 0 18px}
+  a{color:#111;text-underline-offset:4px}
+  .rule{height:1px;background:#eee;margin:22px 0}
+</style>
+<div class="wrap">
+  <h1>Minimal page</h1>
+  <p>Whitespace and typography do the heavy lifting.</p>
+  <div class="rule"></div>
+  <a href="#">Read more</a>
+</div>`
+    },
+    {
+      id:"dashboard",
+      name:"卡片化 / Dashboard",
+      desc:"模块化信息容器，易响应式重排",
+      tags:["product","dark"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:24px;background:#0f172a;color:#e2e8f0}
+  .grid{display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:14px;max-width:980px}
+  .card{background:#111c33;border:1px solid #223055;border-radius:14px;padding:14px}
+  .kpi{font-size:28px;font-weight:800}
+  .muted{color:#94a3b8;font-size:12px}
+</style>
+<div class="grid">
+  <div class="card"><div class="muted">Revenue</div><div class="kpi">$42.1k</div></div>
+  <div class="card"><div class="muted">Active Users</div><div class="kpi">8,204</div></div>
+  <div class="card"><div class="muted">Latency (p95)</div><div class="kpi">210ms</div></div>
+</div>`
+    },
+    {
+      id:"brutal",
+      name:"Brutalism / Neo-Brutalism",
+      desc:"高对比、粗边框、强烈视觉冲击",
+      tags:["visual"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#fff200;color:#000}
+  .box{width:360px;background:#fff;border:4px solid #000;padding:16px}
+  .btn{display:inline-block;margin-top:10px;background:#ff3b3b;color:#000;
+    padding:10px 12px;border:3px solid #000;text-decoration:none;font-weight:900}
+  h3{margin:0 0 8px}
+</style>
+<div class="box">
+  <h3>Neo-Brutal</h3>
+  <p>Bold borders, loud colors, no subtlety.</p>
+  <a class="btn" href="#">DO IT</a>
+</div>`
+    },
+    {
+      id:"retro",
+      name:"复古像素 / Lo-fi",
+      desc:"像素/终端感配色与低保真风格",
+      tags:["visual","dark"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:monospace;margin:40px;background:#111;color:#7CFF7C}
+  .panel{width:360px;border:2px solid #7CFF7C;padding:14px;box-shadow:6px 6px 0 #2b7}
+  .btn{display:inline-block;margin-top:10px;border:2px solid #7CFF7C;padding:8px 10px;
+    color:#7CFF7C;text-decoration:none}
+</style>
+<div class="panel">
+  <div>SYS: READY</div>
+  <div>MSG: INSERT COIN</div>
+  <a class="btn" href="#">START</a>
+</div>`
+    },
+    {
+      id:"enterprise",
+      name:"企业/效率工具风（表格密度）",
+      desc:"高信息密度、表格/筛选/状态标记",
+      tags:["product"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:24px;background:#f8fafc;color:#0f172a}
+  .wrap{max-width:760px;background:#fff;border:1px solid #e2e8f0;border-radius:10px}
+  .bar{display:flex;gap:10px;align-items:center;padding:12px;border-bottom:1px solid #e2e8f0}
+  input{flex:1;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:10px 12px;border-bottom:1px solid #eef2f7;font-size:13px}
+  th{background:#f1f5f9;text-align:left}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#dcfce7;color:#166534;font-size:12px}
+</style>
+<div class="wrap">
+  <div class="bar"><strong>Users</strong><input placeholder="Search…" /></div>
+  <table>
+    <thead><tr><th>Name</th><th>Role</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>Ada</td><td>Admin</td><td><span class="pill">Active</span></td></tr>
+      <tr><td>Lin</td><td>Viewer</td><td><span class="pill">Active</span></td></tr>
+    </tbody>
+  </table>
+</div>`
+    },
+    {
+      id:"illustration3d",
+      name:"插画/3D 点缀（渐变徽章）",
+      desc:"用插画/3D/渐变作为品牌记忆点",
+      tags:["visual","dark"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#0b1020;color:#eaf0ff}
+  .card{width:380px;border-radius:16px;padding:18px;background:#111a33;border:1px solid #25315b}
+  .badge{width:64px;height:64px;border-radius:18px;
+    background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,.15) 35%, transparent 60%),
+               linear-gradient(135deg, #7c3aed, #22d3ee);
+    box-shadow:0 18px 30px rgba(124,58,237,.25)}
+</style>
+<div class="card">
+  <div class="badge"></div>
+  <h3>Hero card</h3>
+  <p>Gradient + highlight for a 3D-ish brand accent.</p>
+</div>`
+    },
+    {
+      id:"darkfirst",
+      name:"Dark-first（暗黑模式优先）",
+      desc:"暗色体系+分层对比+强调色控制",
+      tags:["dark","product"],
+      html:`<!doctype html><meta charset="utf-8" />
+<style>
+  body{font-family:system-ui;margin:40px;background:#0a0f1a;color:#e6edf7}
+  .card{width:360px;background:#0f172a;border:1px solid #1f2a44;border-radius:14px;padding:18px}
+  .btn{display:inline-block;margin-top:12px;background:#22c55e;color:#06210f;
+    padding:10px 12px;border-radius:10px;text-decoration:none;font-weight:800}
+  .muted{color:#9aa7bd}
+</style>
+<div class="card">
+  <h3>Dark UI</h3>
+  <p class="muted">Careful contrast and surface layering.</p>
+  <a class="btn" href="#">Run</a>
+</div>`
+    },
+  ];
+
+  const grid = document.getElementById('grid');
+  const q = document.getElementById('q');
+  const pills = [...document.querySelectorAll('.pill')];
+
+  const backdrop = document.getElementById('backdrop');
+  const frame = document.getElementById('frame');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalSub = document.getElementById('modalSub');
+  const closeBtn = document.getElementById('closeBtn');
+  const copyBtn = document.getElementById('copyBtn');
+
+  let activeTag = "all";
+  let activeId = null;
+
+  function escapeHtml(s){
+    return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+
+  function tileTemplate(d){
+    const keywords = [d.id, d.name].join(" ").toLowerCase();
+    return `
+      <button class="tile" data-id="${d.id}" data-key="${escapeHtml(keywords)}" type="button">
+        <span class="badge">${d.id}</span>
+        <h3>${escapeHtml(d.name)}</h3>
+        <p class="meta">${escapeHtml(d.desc)}</p>
+        <div class="previewBar" aria-hidden="true">
+          <span class="dot a"></span><span class="dot b"></span><span class="dot c"></span>
+          <span style="color:rgba(255,255,255,.35);font-size:12px;margin-left:4px">点击预览</span>
+        </div>
+      </button>
+    `;
+  }
+
+  function render(){
+    const query = q.value.trim().toLowerCase();
+    const list = demos.filter(d=>{
+      const tagOk = activeTag==="all" ? true : d.tags.includes(activeTag);
+      const qOk = !query ? true : (d.id+" "+d.name+" "+d.desc).toLowerCase().includes(query);
+      return tagOk && qOk;
+    });
+    grid.innerHTML = list.map(tileTemplate).join("");
+  }
+
+  function openModal(id){
+    const d = demos.find(x=>x.id===id);
+    if(!d) return;
+    activeId = id;
+    modalTitle.textContent = d.name;
+    modalSub.textContent = d.desc;
+    frame.srcdoc = d.html;
+    backdrop.dataset.open = "true";
+    // focus for accessibility
+    closeBtn.focus();
+  }
+  function closeModal(){
+    backdrop.dataset.open = "false";
+    frame.srcdoc = "";
+    activeId = null;
+  }
+
+  grid.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.tile');
+    if(!btn) return;
+    openModal(btn.dataset.id);
+  });
+
+  pills.forEach(p=>{
+    p.addEventListener('click', ()=>{
+      pills.forEach(x=>x.dataset.active="false");
+      p.dataset.active="true";
+      activeTag = p.dataset.tag;
+      render();
+    });
+  });
+
+  q.addEventListener('input', render);
+
+  closeBtn.addEventListener('click', closeModal);
+
+  backdrop.addEventListener('click', (e)=>{
+    // 点击遮罩关闭（点击 modal 本身不关闭）
+    if(e.target === backdrop) closeModal();
+  });
+
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === "Escape" && backdrop.dataset.open === "true") closeModal();
+  });
+
+  copyBtn.addEventListener('click', async ()=>{
+    if(!activeId) return;
+    const d = demos.find(x=>x.id===activeId);
+    const text = d?.html || "";
+    try{
+      await navigator.clipboard.writeText(text);
+      copyBtn.textContent = "已复制";
+      setTimeout(()=>copyBtn.textContent="复制该示例 HTML", 900);
+    }catch{
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+      copyBtn.textContent = "已复制";
+      setTimeout(()=>copyBtn.textContent="复制该示例 HTML", 900);
+    }
+  });
+
+  render();
+</script>
+</body>
+</html>
